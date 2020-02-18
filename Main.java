@@ -1,7 +1,8 @@
 //This program was written by Raquel Akiva for CISC 3130-TY9 (TU/THU 9:05 AM - 10:45 AM)
 import java.util.Scanner;
 import java.io.*;
-//I decided to use only one Spotify chart (The United States). In my story, the CEO wants to know the top-200 artists in the USA!!!!
+//I decided to use only one Spotify chart (The United States) from a random week.
+//In my story, the CEO wants to know the top-200 artists in the USA!!!!
 class Main{
     public static void main(String[] args) throws IOException{
         //We create an empty linked list
