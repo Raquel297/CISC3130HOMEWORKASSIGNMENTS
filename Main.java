@@ -1,177 +1,285 @@
-//This program was written by Raquel Akiva for CISC 3130-TY9 (TU/THU 9:05 AM - 10:45 AM)
-import java.util.Scanner;
 import java.io.*;
-//I decided to use only one Spotify chart (The United States) from a random week.
-//In my story, the CEO wants to know the top-200 artists in the USA!!!!
-class Main{
+import java.util.Scanner;
+import java.io.BufferedReader; 
+import java.util.ArrayList;
+import java.io.PrintWriter;
+
+public class Main{
     public static void main(String[] args) throws IOException{
-        //We create an empty linked list
-        LinkedList linkData = new LinkedList();
-        File spotifyData = new File("Spotify.csv");
-        //Connect scanner object scan to the file with the music data
-        Scanner scan = new Scanner(spotifyData);
-        //This value ROWS holds the number of artists we are tracking (with duplicates for now)
-        final int ROWS = 200;
-        //The first five columns are to hold the data from the CSV file
-        final int COLUMNS = 5; //this number should NOT be changed
-        String[][] artistsWithDuplicates = new String[ROWS][COLUMNS];
-        readInFile(spotifyData, scan, artistsWithDuplicates, ROWS, COLUMNS);
-        //Please note that the 1-dimensional arrays artistNameCheck[] and howMany[] may be partially filled arrays
-        //We check to see how many times an artist's name appears
-        //We make use of parallel arrays (NOT 2-dimensional arrays this time)
-        //The 1-dimensional array artistNameCheck[] will contain each non-duplicated artist's name 
-        //The 1-dimensional array howMany[] will contain the number of times an artist appeared on the Spotify top-200 chart
-        String[] artistNameChecked = new String[ROWS];
-        int[] howMany = new int[ROWS];
-        boolean isDuplicate = false;
-        checkDupsAndCount(artistNameChecked, artistsWithDuplicates, howMany, isDuplicate, ROWS);
-        //We now call the method that will alphabetize the array of artist's names
-        alphabetize(artistNameChecked, artistsWithDuplicates, ROWS, howMany);
-        //I am aware that the array howMany[] can contain extraneous data. We will not print 
-        //the extraneous data to the output file. That is why I wrote the if() condition below
-        for(int i = 0; i < ROWS; i++){
-          if(artistsWithDuplicates[i][2].equals("") == false){
-               linkData.insertToLinkedList(artistNameChecked[i], howMany[i]);
-          }
+      
+      File[] files;
+      File fileHold = new File("C:/Users/Account 1/Documents/SpotifyFiles");
+      //Now, we have an array of files containing the spotify files data in the directory. 
+      //You can create a directory to hold each file and then you can run the program
+      //There is code to create a directory of files, but I do not want to write it for multiple unexplained reasons
+      files = fileHold.listFiles(); 
+      final int SONGS = 200;
+      String song[] = new String[SONGS];
+      ArrayList<String> songList = new ArrayList<String>();
+      //This array list holds the list of songs from every file without duplicates 
+      ArrayList<String> noDuplicates = new ArrayList<String>();
+      QueueUsingLinkedList songs = new QueueUsingLinkedList();
+      for(int n = 0; n < files.length; n++){
+         processFiles(n, files, song);
+         insertIntoArrayList(song, songList);
+      }
+      sortSongs(songList);
+      //Since we are working with multiple files from different weeks, they may share songs. 
+      //Therefore, our array list songList will have duplicates
+      //We remove these duplicates
+      removeDuplicates(songList, noDuplicates);
+      //It is unnecessary to merge two queues into one since we can just directly insert the elements from the array list 
+      //into one queue 
+      insertManyIntoQueue(songs, noDuplicates);
+      //Now, we output the song list data to a text file 
+      outputToFile(noDuplicates);
+      //Now, we send songs that were listened to to the stack data structure
+      //We prompt the user and ask them if they want to listen to a song
+      //If they do, the song will be removed from the queue and placed into the stack 
+      StackUsingLinkedList recentlyListenedTo = new StackUsingLinkedList();
+      Scanner response = new Scanner(System.in);
+      System.out.println("Would you like to listen to a song? Press Y or y if yes and any other key if not.");
+      char input = response.next().charAt(0);
+      while(input == 'Y' || input == 'y'){
+         sendToStack(songs, recentlyListenedTo);
+         System.out.println("We added the song to your history play list. Would you like to view your play list?."+
+                            " Press Y or y if yes and any other key if not.");
+         input = response.next().charAt(0);
+         if(input == 'Y' || input == 'y'){
+            viewPlayList(recentlyListenedTo);
+         }
+         System.out.println("Would you like to listen to a song? Press Y or y if yes and any other key if not.");
+         input = response.next().charAt(0);
+       }
+       response.close();
+      } //End main() method 
+    
+    public static void processFiles(int k, File[] files, String[] song) throws IOException{
+        FileReader read = new FileReader(files[k]);
+        BufferedReader connect = new BufferedReader(read);
+        for(int i = 0; i < song.length; i++){
+              String[] kipper = connect.readLine().split(","); 
+              //Now, the song[] array will soon have every song from every file (after the iterates of the for-loop in main() is done)
+              song[i] = kipper[1];
         }
-        linkData.displayLinkedList();
-        scan.close();
+    } //End method
+    
+    public static void insertIntoArrayList(String[] song, ArrayList<String> songList){
+      for(int i = 0; i < song.length; i++){
+         songList.add(song[i]);
+      }
+    } //End method 
+    
+    //When this method is continuously called, it will automatically create ONE queue with EVERY song from EVERY file!
+    //That way, there is no need to merge two queues into one as this method already completes the task
+    public static void insertManyIntoQueue(QueueUsingLinkedList songs, ArrayList<String> noDups){
+        for(int i = 0; i < noDups.size(); i++){
+            songs.insert(noDups.get(i));
+        }
+    } //End method
+    
+    public static void sortSongs(ArrayList<String> songList){
+        //The choice of sorting algorithms we learned in class does not matter, since the bubble sort, insertion sort, and selection sort each 
+        //have a worst-case run-time of N^2 (assuming that there are N data elements). However, I decided to implement the insertion sort because I understand 
+        //it the least.
+        for(int i = 0; i < songList.size(); i++){
+            String temp = songList.get(i);
+            int j = i;
+            String compare2 = temp.toLowerCase().replaceAll(".;(;);[;];*;$;%;-;+;,;&;x", "");
+            while(j > 0 && songList.get(j-1).toLowerCase().replaceAll(".;(;);[;];*;$;%;-;+;,;&;x", "").compareTo(compare2) > 0){
+                songList.set(j, songList.get(j-1));
+                j--;
+            }
+            songList.set(j, temp);
+        }
+    } //End method
+    
+    public static void removeDuplicates(ArrayList<String> songs, ArrayList<String> noDups){
+      //Since the array list songs is already ordered alphabetically, the algorithm we use to check for duplicates is very simple
+      //in that it only requires a few lines (if the songs were not ordered alphabetically, we would have to use a nested 
+      //for loop
+      boolean firstCheck = true;
+      for(int i = 0; i < songs.size() - 1; i++){
+        if(!(songs.get(i).equals(songs.get(i+1))) || firstCheck == false){
+          noDups.add(songs.get(i));
+          firstCheck = true;
+        }
+      }
+    } //End method
+    
+    //This method outputs the array list that holds the non-duplicate songs in alphabetical order to a text file 
+    //Note: We may instead use the queue songs back in the main() method since it has the same song list as the array list 
+    //without duplicates 
+    public static void outputToFile(ArrayList<String> songsWithoutDuplicates) throws IOException{
+      PrintWriter printTo = new PrintWriter("SpotifyMultipleWeeks.txt");
+      for(int i = 0; i < songsWithoutDuplicates.size(); i++){
+         printTo.println(songsWithoutDuplicates.get(i));
+      }
+      printTo.close();
+    } //End method
+    
+    //This method removes an element from the queue (I only implemented removing from the head and not the rear of the queue
+    //because I felt it is more logical and practical) to remove the "next runner-up" from the queue and not the song
+    //that is the last element of the queue. Infact, many i-Pods and youtube playlists work this way.
+    public static void sendToStack(QueueUsingLinkedList songs, StackUsingLinkedList songNoDup){
+        songNoDup.push(songs.remove());
+    } //End method
+    
+    //This method calls the display() method in the stack class and it displays the deleted elements from the queue 
+    public static void viewPlayList(StackUsingLinkedList history) throws IOException{
+        history.display();
+    } //End method 
+      
+    //This method merges two queues into one queue 
+    //I did not need to use it at all, however, I will keep it here in the event that I want to use it
+    public static QueueUsingLinkedList mergeQueue(QueueUsingLinkedList queue1, QueueUsingLinkedList queue2){
+        QueueUsingLinkedList merged = new QueueUsingLinkedList();
+        //This removes the first element from queue 1 and places it in merged queue and then removes the first element from queue 2 and places it in merged queue
+        while(!(queue1.isEmpty() && queue2.isEmpty())){
+            if(!queue1.isEmpty())
+              merged.insert(queue1.remove());
+            if(!queue2.isEmpty())
+              merged.insert(queue2.remove());
+        }
+        return merged;
+    } //End method
+    
+}
+
+class QueueUsingLinkedList{ 
+    class Node{
+      String song;
+      Node next;
+      //Node constructor method
+      Node(String data){
+        song = data;
+        next = null;
+      }
+    }
+    Node rear, head;
+    int numberOfItems; //I like to keep track of the number of items in the Queue
+    QueueUsingLinkedList(){
+        rear = null;
+        head = null;
+        numberOfItems = 0; 
     }
     
-    /**Method readInFile() reads in a CSV file and stores the data in a 2-dimensional array
-     *@param spotify is an object of type file
-     *@param scanner is an object of type Scanner that is connected to the spotify file
-     *@param artDup[][] is a 2-dimensional array that holds 5 pieces of data from the spotify file: position, 
-     *artist name, track, streams, and url
-     *@ROW and @COLUMN hold the dimensions of the 2-d array artDup[][]
-     *In this example, they hold 200*5 for the top-200 songs on spotify and the 5 pieces of data associated with each song
-     */
-     public static void readInFile(File spotify, Scanner scanner, String[][] artDup, int ROW, int COLUMN){
-         for(int i = 0; i < ROW; i++){
-            String temp1 = scanner.nextLine();
-            for(int j = 0; j < COLUMN; j++){
-               //Read in each line of the file into string temp1 
-               String[] temp2 = temp1.split(",");
-               //Store each piece of data from string temp1 (that is: position, track, artist name, streams, url)
-               //into each of the five columns. Please note that artistsWithDuplicates[i][2] contains each artist's name
-               //I decided store ALL artist names (even if there are duplicates) since there are different pieces
-               //of data associated with each name (position, track, streams, url)
-               //I will print all artist names (without duplication) by using a 1-dimensional array later on in the program
-               artDup[i][j] = temp2[j];
-            }
-        }
-    }
-    /**Method checkDupsAndCount() counts the number of times an artist's name 
-     *appears and checks if an artist's name appears more than once
-     *@param artist[] is the 1-d array that holds the non-duplicated artist names
-     *@param artDups[][] is the 2-d array that holds the spotify file data
-     *@param counting[] is the 1-d array that holds the number of times each artist appeared on the spotify file
-     *@param isDup is a boolean variable to help us decide if an artist's name has duplicates
-     *@param ROW is the first dimension of the 2-d array artDups so that we may count through each artist's name on
-     *the spotify list
-     */
-    public static void checkDupsAndCount(String[] artist, String[][] artDups, int[] counting, boolean isDup, int ROW){
-        for(int i = 0; i < ROW; i++){
-           //We presume that each artist's name appears at least once and if they appear more than once, we will add 1
-           counting[i] = 1;
-           for(int j = i+1; j < ROW; j++){
-              if((artDups[i][2].toLowerCase()).equals((artDups[j][2].toLowerCase())) && artDups[i][2] != ""){
-                //We get rid of the duplicate found
-                artDups[j][2] = "";
-                isDup = true;
-                counting[i]++;
-              }
-           }
-           //In the event that there are no duplicates
-           if(isDup == false){
-              artist[i]  = artDups[i][2];
-           }
-           //In the event that there are duplicates
-           else{ 
-              artist[i] = artDups[i][2];
-           }
-        }
-    }
-    /**Method alphabetize() rearranges the data in the list to be in alphabetical order
-     *@param artNoDup[] is a 1-d array that holds each artist's name without duplicates
-     *@artWithDup[][] is the 2-d array that holds the spotify data list. We need this 
-     *array because as stated in the main method, some String artist names in artWithDup[][] 
-     *are empty. 
-     *@param ROW is the first dimension of the 2-d array artWithDup[][]. We need this piece of data
-     *since artNoDup[] may be a partially filled array
-     *@param howMany[] is the parallel array to artNoDup[]. We need this array because if there are
-     *two names that are out of order, when we switch them to be in their proper place, we will need
-     *to also switch their parallel values (the number of times they appeared on the spotify list)
-     */
-    public static void alphabetize(String[] artNoDup, String[][] artWithDup, int ROW, int[] howMany){
-        for(int i = 0; i < ROW; i++){
-            for(int j = i+1; j < ROW; j++){
-               //It is quite difficult (in my opinion) to reverse the elements of a linked list
-               //Therefore, when I sorted the names in the 1-dimensional array artNoDup[]
-               //I ordered them from z-a (and not a-z). That way, the linked list will print 
-               //out the names in alphabetical order (a-z)
-               String name1 = artNoDup[i].toLowerCase().replaceAll(".;(;);[;];*;$;%;-;+;,;&;x", "");
-               String name2 = artNoDup[j].toLowerCase().replaceAll(".;(;);[;];*;$;%;-;+;,;&;x", "");
-               if(name1.compareTo(name2) < 0 && artWithDup[j][2].equals("") == false 
-                  && artWithDup[i][2].equals("") == false){
-                  String temp = artNoDup[j];
-                  artNoDup[j] = artNoDup[i];
-                  artNoDup[i] = temp;
-                  int tempo = howMany[j];
-                  howMany[j] = howMany[i];
-                  howMany[i] = tempo;
-               }
-            }          
-        }
-    }
-}
 
-//We create the Node{} class
-class Node{
-        String musicArtists;
-        int howMany;
-        Node next; 
-        //Constructor method/function for creating a new node
-        Node(String music, int number){
-            musicArtists = music;
-            howMany = number;
-        }
-        public void holdStuff() throws IOException{
-            PrintWriter print = new PrintWriter("SpotifyTop200ArtistsGloballyList.txt");
-        }
-        //This method displays the data in each node
-        public void displayNodeData(PrintWriter print) throws IOException{
-            String format = "%-20s %5d\n";
-            print.printf(format, musicArtists, howMany);
-        }
-}
-
-//We create the actual LinkedList{} class and implementation
-class LinkedList{
-    //We create the header reference variable that will point to the first node
-    private Node head;
-    LinkedList(){
-        head = null;
+    public boolean isEmpty(){
+      return(numberOfItems == 0);
     }
-       public boolean isEmpty(){
-           return (head == null);
+    
+    public void insert(String song){
+      Node temp = new Node(song);
+      if(rear == null){
+         head = temp;
+         rear = temp;
+      }
+      rear.next = temp;
+      rear = temp;
+      numberOfItems++;
+    }
+    
+    public String remove(){
+      if(isEmpty()){
+        System.out.println("The queue is empty");
+        rear = null;
+        return "";
+      }
+      else{
+        Node temp = head;
+        head = head.next;
+        numberOfItems--;
+        return temp.song;
+      }
+    }
+    
+    //This method returns the head/front of the queue
+    public String peakHead(){
+      if(isEmpty()) //We check to see if the queue is completely empty
+        return "The queue is empty.";
+      else 
+        return head.song;
+    }
+    
+    //This method returns the rear of the queue 
+    public String peakRear(){
+      if(isEmpty()){ //We check to see if the queue is completely empty
+        rear = null;
+        return "The queue is empty";
+      }
+      else
+        return rear.song;
+    }
+    
+} //End of Queue class 
+
+
+//We implement the Stack data structure so that we can keep track of the music listened to. 
+//If a song is removed from a play list, it will go to the stack we created.
+//I decided to implement the stack using a linked list. I am aware of its shortcomings. For example, users typically listen to many songs 
+//and so the linked list will be accessed frequently because so many songs will be added to the history. However, it is better than arrays 
+//since we can add as many songs as we want to. I also wanted to practice using linked lists since we just learned it in class. 
+class StackUsingLinkedList{
+    class Node{
+       String song;
+       Node next;
+       //Node Constructor method
+       Node(){
+           next = null;
        }
-    //This method actually connects each node's piece of data 
-    public void insertToLinkedList(String musicArtists, int number){
-        //We create a new reference variable of type Node 
-        Node musicPassOn = new Node(musicArtists, number);
-        musicPassOn.next = head;
-        head = musicPassOn;
     }
-    //HERE IS WHERE YOU ARE SUPPOSED TO IMPLEMENT THE DISPLAY METHOD/FUNCTION THAT WILL PUT THE LIST OF ALPHABETIZED ARTIST NAMES INTO AN OUTPUT TEXT FILE 
-    public void displayLinkedList() throws IOException{
-        Node current = head;
-        PrintWriter print = new PrintWriter("SpotifyTop200ArtistsList.txt");
-        while(current != null){
-            current.displayNodeData(print);
-            current = current.next;
+    Node top; //This reference variable points to the top of the Stack
+    int numberOfItems;
+    
+    //Linked List Constructor method 
+    StackUsingLinkedList(){
+        top = null;
+        numberOfItems = 0;
+    }
+    
+    //This method allows the user/programmer to add songs to their history list if they removed it from the queue 
+    public void push(String data){
+           Node temp = new Node();
+           temp.song = data; 
+           temp.next = top; 
+           top = temp;
+           numberOfItems++;
+    }
+    
+    public boolean isEmpty(){
+        return(numberOfItems == 0); 
+    }
+    
+    //This method allows the user/programmer to see what is at the top of the stack
+    public String peek(){
+        if(!isEmpty()){
+            return top.song;
         }
-        print.close();
+        return "The stack is empty.";
     }
-}
-
+    
+    //This method allows the user/programmer to "remove" an element from the stack
+    public void pop(){
+        if(!isEmpty()){
+           top = top.next; //This line of code is very interesting to me, because it means that the top element of the stack isn't actually removed
+           //from memory; instead we just move the top Node pointer to the next top-most element in the stack. 
+        }
+        else{
+           System.out.println("The stack is empty.");
+            }
+        numberOfItems--;
+    }
+    
+    //This method allows the user/programmer to view their current song history on the screen/console
+    //I am aware that we are not required to implement this method, however, I decided to because I believe it is helpful 
+    public void display() throws IOException{
+        Node temp = top;
+        if(top == null)
+          System.out.println("The stack is empty");
+        while(temp != null){
+           System.out.println(temp.song);
+           temp = temp.next; //Now, the pointer reference variable temp is pointing to the next top-most item in the stack
+        }
+    }
+} //End of stack with linked list implementation
