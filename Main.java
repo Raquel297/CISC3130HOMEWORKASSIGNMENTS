@@ -1,3 +1,5 @@
+//Raquel A. 
+//CISC 3130 - TY9 Homework Assignment # 2
 import java.io.*;
 import java.util.Scanner;
 import java.io.BufferedReader; 
