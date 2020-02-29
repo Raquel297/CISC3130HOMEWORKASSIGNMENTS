@@ -3,11 +3,14 @@ import java.util.Scanner;
 import java.io.BufferedReader; 
 import java.util.ArrayList;
 import java.io.PrintWriter;
+//Please note that I used 4 weeks worth of global song data because I believe a quarter is a month and global song data reveals
+//more information than just song data from a particular country
 
 public class Main{
     public static void main(String[] args) throws IOException{
       
       File[] files;
+      //The path name below can be changed when directory is created
       File fileHold = new File("C:/Users/Account 1/Documents/SpotifyFiles");
       //Now, we have an array of files containing the spotify files data in the directory. 
       //You can create a directory to hold each file and then you can run the program
