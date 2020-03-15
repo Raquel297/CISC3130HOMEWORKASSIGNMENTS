@@ -35,7 +35,7 @@ public class Main{
       //When we are done inserting, we will want the user to be able to search for a movie title based on the name
       String movieName;
       Scanner scan = new Scanner(System.in);
-      System.out.println("What movie title are you searching for?");
+      System.out.println("What movie title are you searching for? Press -1 to exit the program.");
       movieName = scan.nextLine();
       while(!movieName.equals("-1")){
          boolean status = movieTree.search(movieName);
@@ -46,8 +46,7 @@ public class Main{
            System.out.println("We found the movie you are looking for!!!");
          }
          System.out.println("Search for another movie or press -1 to exit");
-         String fix = scan.nextLine();
-         movieName = scan.next();
+         movieName = scan.nextLine();
      }
      scan.close();
      //Below is an example of using the subSet() method to print all movie titles in alphabetical order in a given range
