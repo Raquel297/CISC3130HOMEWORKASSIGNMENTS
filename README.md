@@ -1,4 +1,3 @@
-Welcome to My Portfolio. Here, you will find different software projects I've been working on. 
 <!DOCTYPE html> 
 <html>  
    <head> 
@@ -6,6 +5,7 @@ Welcome to My Portfolio. Here, you will find different software projects I've be
       <title>My Portfolio</title> 
    </head> 
   
-   <body> 
+   <body>
+   Welcome to My Portfolio. Here, you will find different software projects I've been working on. 
    </body> 
 </html> 
