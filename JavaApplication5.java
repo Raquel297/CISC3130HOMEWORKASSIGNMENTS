@@ -1,5 +1,5 @@
 //Raquel A. 
-//CISC 3130 - TY9 Homework Assignment # 3
+//CISC 3130 - TY9 Homework Assignment # 4
 //Note to professor: Some methods share the same variable names. I could not think of creative and appropriate 
 //names, so I decided to re-use them. 
 package javaapplication5;
