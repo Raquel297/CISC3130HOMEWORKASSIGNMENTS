@@ -1,4 +1,5 @@
 theme: jekyll-theme-hacker
+future: true
 title: Welcome to my homepage! 
 description: Here, you will find a list of my projects with brief descriptions!
 
